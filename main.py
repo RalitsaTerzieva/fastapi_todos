@@ -30,7 +30,7 @@ def read_all(db: db_dependency, status_code=status.HTTP_200_OK):
     return db.query(models.Todos).all()
 
 @app.post('/todo', status_code=status.HTTP_200_OK)
-def read_todo(db: db_dependency, todo_request: TodoRequest):
+def create_todo(db: db_dependency, todo_request: TodoRequest):
     todo_model = models.Todos(**todo_request.model_dump())
 
     db.add(todo_model)
