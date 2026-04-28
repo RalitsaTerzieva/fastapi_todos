@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Path, status
 import models
 from database import engine, SessionLocal
 from typing import Annotated
@@ -19,11 +19,11 @@ def get_db():
 db_dependency = Annotated[Session, Depends(get_db)]
 
 @app.get('/')
-def read_all(db: db_dependency):
+def read_all(db: db_dependency, status_code=status.HTTP_200_OK):
     return db.query(models.Todos).all()
 
-@app.get('/todo/{todo_id}')
-def read_todo(todo_id:int, db: db_dependency):
+@app.get('/todo/{todo_id}', status_code=status.HTTP_200_OK)
+def read_todo(db: db_dependency, todo_id: int = Path(..., gt=0)):
     todo_model = db.query(models.Todos).filter(models.Todos.id == todo_id).first()
     if todo_model is not None:
         return todo_model
