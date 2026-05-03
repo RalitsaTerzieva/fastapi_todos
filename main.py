@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, Path, status
+from pydantic import BaseModel, Field
 import models
 from database import engine, SessionLocal
 from typing import Annotated
@@ -17,6 +18,12 @@ def get_db():
         db.close()
 
 db_dependency = Annotated[Session, Depends(get_db)]
+
+class TodoRequest(BaseModel):
+    title: str = Field(min_length=3)
+    description: str = Field(min_length=3, max_length=100)
+    priority: int = Field(gt=0, lt=6)
+    complete: bool
 
 @app.get('/')
 def read_all(db: db_dependency, status_code=status.HTTP_200_OK):
