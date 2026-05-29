@@ -1,7 +1,7 @@
 from datetime import timedelta, datetime, timezone
 
 from fastapi import APIRouter, Depends
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from pydantic import BaseModel
 from models import Users
 from passlib.context import CryptContext
@@ -17,6 +17,7 @@ SECRET_KEY = "8c3b9a4c5f1e2d7a8b9c0d1e2f3a4b5c6d7e8f90123456789abcdef012345678"
 ALGORITHM = "HS256"
 
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 class CreateUserRequest(BaseModel):
     username: str
@@ -74,7 +75,7 @@ async def create_user(db: db_dependency,create_user_request: CreateUserRequest):
     db.commit()
 
 
-@router.post("/token")
+@router.post("/token", response_model=Token)
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency):
     user = authenticate_user(form_data.username, form_data.password, db)
     if not user: 
@@ -82,4 +83,4 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
     
     token = create_access_token(user.username, 1, expires_delta=timedelta(minutes=30))
 
-    return token
+    return {'access_token': token, 'token_type': 'bearer'}
