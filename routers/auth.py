@@ -7,8 +7,12 @@ from database import SessionLocal
 from typing import Annotated
 from sqlalchemy.orm import Session
 import starlette.status as status
+from jose import jwt
 
 router = APIRouter()
+
+SECRET_KEY = "8c3b9a4c5f1e2d7a8b9c0d1e2f3a4b5c6d7e8f90123456789abcdef012345678"
+ALGORITHM = "HS256"
 
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
