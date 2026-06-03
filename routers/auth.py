@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from models import Users
 from passlib.context import CryptContext
@@ -45,5 +46,5 @@ async def create_user(db: db_dependency,create_user_request: CreateUserRequest):
 
 
 @router.post("/token")
-async def login_for_access_token():
+async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency):
     pass
