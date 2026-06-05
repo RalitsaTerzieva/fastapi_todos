@@ -5,6 +5,7 @@ from passlib.context import CryptContext
 from database import SessionLocal
 from typing import Annotated
 from sqlalchemy.orm import Session
+import starlette.status as status
 
 router = APIRouter()
 
@@ -27,8 +28,8 @@ def get_db():
 
 db_dependency = Annotated[Session, Depends(get_db)]
 
-@router.post('/auth')
-async def create_user(create_user_request: CreateUserRequest):
+@router.post('/auth', status_code=status.HTTP_201_CREATED)
+async def create_user(db: db_dependency,create_user_request: CreateUserRequest):
     create_user_model = Users(
         email=create_user_request.email,
         username=create_user_request.username,
@@ -39,4 +40,5 @@ async def create_user(create_user_request: CreateUserRequest):
         is_active=True
     )
 
-    return create_user_model
+    db.add(create_user_model)
+    db.commit()
