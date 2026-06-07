@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from models import Users
 from passlib.context import CryptContext
+from database import SessionLocal
 
 router = APIRouter()
 
@@ -14,6 +15,15 @@ class CreateUserRequest(BaseModel):
     last_name: str
     password: str
     role: str
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+db_dependency = Annotated[Session, Depends(get_db)]
 
 @router.post('/auth')
 async def create_user(create_user_request: CreateUserRequest):
