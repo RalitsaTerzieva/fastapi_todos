@@ -10,13 +10,16 @@ from sqlalchemy.orm import Session
 import starlette.status as status
 from jose import JWTError, jwt
 
-router = APIRouter()
+router = APIRouter(
+    prefix='/auth',
+    tags=['auth']
+)
 
 SECRET_KEY = "8c3b9a4c5f1e2d7a8b9c0d1e2f3a4b5c6d7e8f90123456789abcdef012345678"
 ALGORITHM = "HS256"
 
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 class CreateUserRequest(BaseModel):
     username: str
@@ -73,7 +76,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
                             detail='Could not validate user.')
 
 
-@router.post('/auth', status_code=status.HTTP_201_CREATED)
+@router.post('/', status_code=status.HTTP_201_CREATED)
 async def create_user(db: db_dependency,create_user_request: CreateUserRequest):
     create_user_model = Users(
         email=create_user_request.email,
