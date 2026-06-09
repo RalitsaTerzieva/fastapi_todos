@@ -63,7 +63,7 @@ def create_access_token(username: str, user_id: int, expires_delta: timedelta | 
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         user_id: int = payload.get('id')
         user_role: str = payload.get('role')
