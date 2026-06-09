@@ -26,9 +26,9 @@ class TodoRequest(BaseModel):
     priority: int = Field(gt=0, lt=6)
     complete: bool
 
-@router.get('/')
-def read_all(db: db_dependency, status_code=status.HTTP_200_OK):
-    return db.query(models.Todos).all()
+@router.get('/', status_code=status.HTTP_200_OK)
+def read_all(user: user_dependency, db: db_dependency):
+    return db.query(models.Todos).filter(models.Todos.owner_id == user.get("id")).all()
 
 @router.post('/todo', status_code=status.HTTP_200_OK)
 def create_todo(user: user_dependency, db: db_dependency, todo_request: TodoRequest):
