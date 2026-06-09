@@ -51,11 +51,12 @@ def authenticate_user(username: str, password: str, db: db_dependency):
     return user
 
 
-def create_access_token(username: str, user_id: int, expires_delta: timedelta | None = None):
+def create_access_token(username: str, user_id: int, role: str, expires_delta: timedelta | None = None):
 
     encode = {
         "sub": username,
-        "id": user_id
+        "id": user_id,
+        'role': role
     }
     expires = datetime.now(timezone.utc) + expires_delta
     encode.update({"exp": expires})
@@ -99,6 +100,6 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail='Could not validate user.')
     
-    token = create_access_token(user.username, 1, expires_delta=timedelta(minutes=30))
+    token = create_access_token(user.username, user.id, user.role, expires_delta=timedelta(minutes=30))
 
     return {'access_token': token, 'token_type': 'bearer'}
