@@ -31,6 +31,7 @@ This is a simple backend project built with **FastAPI**, featuring:
 - FastAPI
 - SQLAlchemy
 - Postgresql
+- Alembic
 - Passlib (bcrypt hashing)
 - Python-JOSE (JWT tokens)
 - Uvicorn
