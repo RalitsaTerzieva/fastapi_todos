@@ -49,5 +49,19 @@ async def change_password(user: user_dependency, db: db_dependency,
     db.add(user_model)
     db.commit()
 
+@router.get("/users", status_code=status.HTTP_200_OK)
+async def get_all_users(user: user_dependency, db: db_dependency):
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication Failed!")
+    return db.query(models.Users).all()
 
 
+@router.put("/phone_number/{phone_number}", status_code=status.HTTP_204_NO_CONTENT)
+async def change_phone_number(user: user_dependency, db: db_dependency,
+                              phone_number: str):
+    if user is None:
+        raise HTTPException(status_code=401, detail='Authentication Failed')
+    user_model = db.query(models.Users).filter(models.Users.id == user.get('id')).first()
+    user_model.phone_number = phone_number
+    db.add(user_model)
+    db.commit()
