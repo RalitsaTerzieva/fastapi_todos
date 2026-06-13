@@ -91,3 +91,27 @@ def test_read_one_authenticated(test_todo):
     
     assert data["title"] == "Learn to code!"
     assert data["owner_id"] == test_todo.owner_id
+
+def test_read_one_authenticated_not_found():
+    response = client.get("/todo/999")
+    assert response.status_code == 404
+    assert response.json() == {'detail': 'Todo not found.'}
+
+def test_create_todo(test_todo):
+    request_data = {
+        "title": "Visit Norway",
+        "description": "Make my dream come true!",
+        "priority": 1,
+        "complete": False    
+    }
+
+    response = client.post("/todo", json=request_data)
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["title"] == request_data["title"]
+    assert data["description"] == request_data["description"]
+    assert data["priority"] == request_data["priority"]
+    assert data["complete"] == request_data["complete"]
