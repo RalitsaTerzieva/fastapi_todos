@@ -115,3 +115,24 @@ def test_create_todo(test_todo):
     assert data["description"] == request_data["description"]
     assert data["priority"] == request_data["priority"]
     assert data["complete"] == request_data["complete"]
+
+
+def test_update_todo(test_todo):
+    request_data = {
+        "title": "Visit Norway",
+        "description": "Make my dream come true!",
+        "priority": 1,
+        "complete": False    
+    }
+
+    response = client.put(f"/todo/{test_todo.id}", json=request_data)
+
+    assert response.status_code == 204
+
+    db = TestingSessionLocal()
+    updated_todo = db.query(Todos).filter(Todos.id == test_todo.id).first()
+
+    assert updated_todo.title == request_data["title"]
+    assert updated_todo.description == request_data["description"]
+    assert updated_todo.priority == request_data["priority"]
+    assert updated_todo.complete == request_data["complete"]
