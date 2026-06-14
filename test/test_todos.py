@@ -136,3 +136,34 @@ def test_update_todo(test_todo):
     assert updated_todo.description == request_data["description"]
     assert updated_todo.priority == request_data["priority"]
     assert updated_todo.complete == request_data["complete"]
+
+
+def test_update_todo_not_found(test_todo):
+    request_data = {
+        "title": "Visit Norway",
+        "description": "Make my dream come true!",
+        "priority": 1,
+        "complete": False    
+    }
+
+    response = client.put("/todo/999", json=request_data)
+
+    assert response.status_code == 404
+    assert response.json() == {'detail': 'Todo not found.'}
+
+
+def test_delete_todo(test_todo):
+    response = client.delete(f"/todo/{test_todo.id}")
+
+    assert response.status_code == 204
+
+    db = TestingSessionLocal()
+    deleted_todo = db.query(Todos).filter(Todos.id == test_todo.id).first()
+
+    assert deleted_todo is None
+
+def test_delete_todo_not_found():
+    response = client.delete("/todo/999")
+
+    assert response.status_code == 404
+    assert response.json() == {'detail': 'Todo not found.'}
