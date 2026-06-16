@@ -27,3 +27,15 @@ def test_change_password_success(test_user):
     response = client.put("/users/password", json=request_data)
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
+
+
+def test_change_password_invalid_current_password(test_user):
+    request_data = {
+        "password": "invalidpassword",
+        "new_password": "newtestpassword"
+    }
+
+    response = client.put("/users/password", json=request_data)
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json() == {'detail': 'Error on password change'}
