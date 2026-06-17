@@ -17,3 +17,13 @@ def test_return_user(test_user):
     assert data['last_name'] == 'Roby'
     assert data['role'] == 'admin'
     assert data['phone_number'] == '111-111-1111'
+
+def test_change_password_success(test_user):
+    request_data = {
+        "password": "testpassword",
+        "new_password": "newtestpassword"
+    }
+
+    response = client.put("/users/password", json=request_data)
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
