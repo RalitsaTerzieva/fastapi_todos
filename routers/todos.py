@@ -7,8 +7,10 @@ from sqlalchemy.orm import Session
 from .auth import get_current_user
 
 
-router = APIRouter()
-
+router = APIRouter(
+    prefix='/todos',
+    tags=['todos']
+)
 
 def get_db():
     db = SessionLocal()
@@ -86,5 +88,6 @@ async def delete_todo(user: user_dependency, db: db_dependency, todo_id: int = P
     if todo_model is None:
         raise HTTPException(status_code=404, detail='Todo not found.')
     db.query(models.Todos).filter(models.Todos.id == todo_id).filter(models.Todos.owner_id == user.get('id')).delete()
+
 
     db.commit()
