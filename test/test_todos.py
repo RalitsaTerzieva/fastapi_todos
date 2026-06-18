@@ -10,7 +10,7 @@ app.dependency_overrides[get_current_user] = override_get_current_user
 
 
 def test_read_all_authenticated(test_todo):
-    response = client.get("/")
+    response = client.get("/todos")
 
     assert response.status_code == status.HTTP_200_OK
 
@@ -21,7 +21,7 @@ def test_read_all_authenticated(test_todo):
     assert data[0]["owner_id"] == test_todo.owner_id
 
 def test_read_one_authenticated(test_todo):
-    response = client.get(f"/todo/{test_todo.id}")
+    response = client.get(f"/todos/todo/{test_todo.id}")
     assert response.status_code == status.HTTP_200_OK
 
     data = response.json()
@@ -30,7 +30,7 @@ def test_read_one_authenticated(test_todo):
     assert data["owner_id"] == test_todo.owner_id
 
 def test_read_one_authenticated_not_found():
-    response = client.get("/todo/999")
+    response = client.get("/todos/todo/999")
     assert response.status_code == 404
     assert response.json() == {'detail': 'Todo not found.'}
 
@@ -42,7 +42,7 @@ def test_create_todo(test_todo):
         "complete": False    
     }
 
-    response = client.post("/todo", json=request_data)
+    response = client.post("/todos/todo", json=request_data)
 
     assert response.status_code == 200
 
@@ -62,7 +62,7 @@ def test_update_todo(test_todo):
         "complete": False    
     }
 
-    response = client.put(f"/todo/{test_todo.id}", json=request_data)
+    response = client.put(f"/todos/todo/{test_todo.id}", json=request_data)
 
     assert response.status_code == 204
 
@@ -86,14 +86,14 @@ def test_update_todo_not_found(test_todo):
         "complete": False    
     }
 
-    response = client.put("/todo/999", json=request_data)
+    response = client.put("/todos/todo/999", json=request_data)
 
     assert response.status_code == 404
     assert response.json() == {'detail': 'Todo not found.'}
 
 
 def test_delete_todo(test_todo):
-    response = client.delete(f"/todo/{test_todo.id}")
+    response = client.delete(f"/todos/todo/{test_todo.id}")
 
     assert response.status_code == 204
 
@@ -106,7 +106,7 @@ def test_delete_todo(test_todo):
         db.close()
 
 def test_delete_todo_not_found():
-    response = client.delete("/todo/999")
+    response = client.delete("/todos/todo/999")
 
     assert response.status_code == 404
     assert response.json() == {'detail': 'Todo not found.'}
