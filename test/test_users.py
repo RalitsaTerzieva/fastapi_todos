@@ -39,3 +39,10 @@ def test_change_password_invalid_current_password(test_user):
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert response.json() == {'detail': 'Error on password change'}
+
+def test_change_phone_number_success(test_user):
+    new_phone_number = '222-222-2222'
+
+    response = client.put(f"/users/phone_number/{new_phone_number}")
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
