@@ -5,18 +5,18 @@ from fastapi.responses import RedirectResponse
 import models
 from database import engine
 from routers import admin, auth, todos, users
+from core.templates import templates
 
 
 app = FastAPI()
 
 models.Base.metadata.create_all(bind=engine)
 
-templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/home")
 def home(request: Request):
-    return templates.TemplateResponse(request=request, name="home.html")
+    return templates.TemplateResponse("home.html", {"request": request})
 
 
 @app.get("/")

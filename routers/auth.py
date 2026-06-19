@@ -1,5 +1,5 @@
 from datetime import timedelta, datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from pydantic import BaseModel
 from models import Users
@@ -9,6 +9,7 @@ from typing import Annotated
 from sqlalchemy.orm import Session
 import starlette.status as status
 from jose import JWTError, jwt
+from core.templates import templates
 
 router = APIRouter(
     prefix='/auth',
@@ -42,6 +43,23 @@ def get_db():
         db.close()
 
 db_dependency = Annotated[Session, Depends(get_db)]
+
+
+### Pages ###
+
+@router.get("/login-page")
+def render_login_page(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="login.html"
+    )
+
+@router.get("/register-page")
+def render_register_page(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="register.html"
+    )
 
 def authenticate_user(username: str, password: str, db: db_dependency):
     user = db.query(Users).filter(Users.username == username).first()
