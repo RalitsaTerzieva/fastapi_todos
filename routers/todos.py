@@ -1,10 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, Path, status
+from fastapi import APIRouter, Depends, HTTPException, Path, status, Request
 from pydantic import BaseModel, Field
+from core import templates
 import models
 from database import SessionLocal
 from typing import Annotated
 from sqlalchemy.orm import Session
 from .auth import get_current_user
+from starlette.responses import RedirectResponse
+from core.templates import templates
 
 
 router = APIRouter(
@@ -27,6 +30,42 @@ class TodoRequest(BaseModel):
     description: str = Field(min_length=3, max_length=100)
     priority: int = Field(gt=0, lt=6)
     complete: bool
+
+def redirect_to_login():
+    redirect_response = RedirectResponse(url="/auth/login-page", status_code=status.HTTP_302_FOUND)
+    redirect_response.delete_cookie(key="access_token")
+    return redirect_response
+
+
+### Pages ###
+@router.get("/todo-page")
+async def render_todo_page(request: Request, db: db_dependency):
+    try:
+        token = request.cookies.get("access_token")
+        print("TOKEN:", token)
+
+        if not token:
+            return redirect_to_login()
+        
+        print("COOKIES:", request.cookies)
+        user = await get_current_user(token)
+        print("USER:", user)
+
+        todos = db.query(models.Todos).filter(
+            models.Todos.owner_id == user.get("id")
+        ).all()
+
+        return templates.TemplateResponse(
+            request=request,
+            name="todo.html",
+            context={
+                "user": user
+            }
+        )
+
+    except Exception as e:
+        print("ERROR:", e)
+        return redirect_to_login()
 
 @router.get('/', status_code=status.HTTP_200_OK)
 def read_all(user: user_dependency, db: db_dependency):
