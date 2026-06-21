@@ -42,14 +42,11 @@ def redirect_to_login():
 async def render_todo_page(request: Request, db: db_dependency):
     try:
         token = request.cookies.get("access_token")
-        print("TOKEN:", token)
 
         if not token:
             return redirect_to_login()
         
-        print("COOKIES:", request.cookies)
         user = await get_current_user(token)
-        print("USER:", user)
 
         todos = db.query(models.Todos).filter(
             models.Todos.owner_id == user.get("id")
@@ -59,6 +56,7 @@ async def render_todo_page(request: Request, db: db_dependency):
             request=request,
             name="todo.html",
             context={
+                "todos": todos,
                 "user": user
             }
         )
@@ -66,6 +64,53 @@ async def render_todo_page(request: Request, db: db_dependency):
     except Exception as e:
         print("ERROR:", e)
         return redirect_to_login()
+    
+
+@router.get('/add-todo-page')
+async def render_todo_page(request: Request):
+    try:
+        user = await get_current_user(request.cookies.get('access_token'))
+
+        if user is None:
+            return redirect_to_login()
+
+        return templates.TemplateResponse(
+            request=request,
+            name="add-todo.html",
+            context={
+                "user": user
+            }
+        )
+
+    except:
+        return redirect_to_login()
+    
+
+@router.post("/todo")
+async def create_todo(
+    todo_request: TodoRequest,
+    db: db_dependency,
+    request: Request
+):
+    user = await get_current_user(request.cookies.get("access_token"))
+
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication failed")
+
+    todo_model = models.Todos(
+        title=todo_request.title,
+        description=todo_request.description,
+        priority=todo_request.priority,
+        complete=todo_request.complete,
+        owner_id=user.get("id")
+    )
+
+    print("CREATE TODO HIT")
+
+    db.add(todo_model)
+    db.commit()
+
+    return {"message": "Todo created successfully"}
 
 @router.get('/', status_code=status.HTTP_200_OK)
 def read_all(user: user_dependency, db: db_dependency):
