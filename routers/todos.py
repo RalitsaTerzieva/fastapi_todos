@@ -105,12 +105,34 @@ async def create_todo(
         owner_id=user.get("id")
     )
 
-    print("CREATE TODO HIT")
-
     db.add(todo_model)
     db.commit()
 
     return {"message": "Todo created successfully"}
+
+
+@router.get("/edit-todo-page/{todo_id}")
+async def render_edit_todo_page(request: Request, todo_id: int, db: db_dependency):
+    try:
+        user = await get_current_user(request.cookies.get('access_token'))
+
+        if user is None:
+            return redirect_to_login()
+
+        todo = db.query(models.Todos).filter(models.Todos.id == todo_id).first()
+
+        return templates.TemplateResponse(
+            request=request,
+            name="edit-todo.html",
+            context={
+                "todo": todo,
+                "user": user
+            }
+        )
+
+    except:
+        return redirect_to_login()
+    
 
 @router.get('/', status_code=status.HTTP_200_OK)
 def read_all(user: user_dependency, db: db_dependency):
