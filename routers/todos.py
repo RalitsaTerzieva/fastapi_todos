@@ -87,31 +87,6 @@ async def render_todo_page(request: Request):
         return redirect_to_login()
     
 
-@router.post("/todo")
-async def create_todo(
-    todo_request: TodoRequest,
-    db: db_dependency,
-    request: Request
-):
-    user = await get_current_user(request.cookies.get("access_token"))
-
-    if user is None:
-        raise HTTPException(status_code=401, detail="Authentication failed")
-
-    todo_model = models.Todos(
-        title=todo_request.title,
-        description=todo_request.description,
-        priority=todo_request.priority,
-        complete=todo_request.complete,
-        owner_id=user.get("id")
-    )
-
-    db.add(todo_model)
-    db.commit()
-
-    return {"message": "Todo created successfully"}
-
-
 @router.get("/edit-todo-page/{todo_id}")
 async def render_edit_todo_page(request: Request, todo_id: int, db: db_dependency):
     try:
