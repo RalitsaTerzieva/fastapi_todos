@@ -189,24 +189,50 @@ def create_todo(
     return todo_model
 
 @router.put("/todo/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def update_todo(user: user_dependency, db: db_dependency, todo_request: TodoRequest, todo_id: int = Path(gt=0)):
+async def update_todo(
+    user: user_dependency,
+    db: db_dependency,
+    todo_request: TodoRequest,
+    todo_id: int = Path(gt=0)
+):
 
     if user is None:
-        raise HTTPException(status_code=401, detail='Authentication Failed')
-    
-    todo_model = db.query(models.Todos).filter(models.Todos.id == todo_id)\
-        .filter(models.Todos.owner_id == user.get('id')).first()
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication Failed"
+        )
+
+    todo_model = db.query(models.Todos).filter(
+        models.Todos.id == todo_id
+    ).filter(
+        models.Todos.owner_id == user.get("id")
+    ).first()
+
     if todo_model is None:
-        raise HTTPException(status_code=404, detail='Todo not found.')
-        
+        raise HTTPException(
+            status_code=404,
+            detail="Todo not found."
+        )
+
+    # NLP analysis
+    classification = classify_todo(
+        todo_request.title,
+        todo_request.description
+    )
+
+    # Update Todo
     todo_model.title = todo_request.title
     todo_model.description = todo_request.description
     todo_model.priority = todo_request.priority
     todo_model.complete = todo_request.complete
 
-    db.add(todo_model)
+    # Update NLP data
+    todo_model.category = classification["category"]
+    todo_model.keywords = ",".join(classification["keywords"])
+
     db.commit()
     db.refresh(todo_model)
+
     return todo_model
 
 @router.delete("/todo/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
