@@ -154,14 +154,38 @@ async def read_todo(user: user_dependency, db: db_dependency, todo_id: int = Pat
     raise HTTPException(status_code=404, detail='Todo not found.')
 
 @router.post('/todo', status_code=status.HTTP_200_OK)
-def create_todo(user: user_dependency, db: db_dependency, todo_request: TodoRequest):
+def create_todo(
+    user: user_dependency,
+    db: db_dependency,
+    todo_request: TodoRequest
+):
     if user is None:
-        raise HTTPException(status_code=401, detail="Unauthorized!")
-    todo_model = models.Todos(**todo_request.model_dump(), owner_id=user.get("id"))
+        raise HTTPException(
+            status_code=401,
+            detail="Unauthorized!"
+        )
+
+    # NLP analysis
+    classification = classify_todo(
+        todo_request.title,
+        todo_request.description
+    )
+
+    # Create Todo
+    todo_model = models.Todos(
+        title=todo_request.title,
+        description=todo_request.description,
+        priority=todo_request.priority,
+        complete=todo_request.complete,
+        owner_id=user.get("id"),
+        category=classification["category"],
+        keywords=",".join(classification["keywords"])
+    )
 
     db.add(todo_model)
     db.commit()
     db.refresh(todo_model)
+
     return todo_model
 
 @router.put("/todo/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
