@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from .auth import get_current_user
 from starlette.responses import RedirectResponse
 from core.templates import templates
+from services.todo_classifier import classify_todo
 
 
 router = APIRouter(
