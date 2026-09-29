@@ -20,6 +20,8 @@
                     <tr>
                         <th scope="col">#</th>
                         <th scope="col">Info</th>
+                        <th scope="col">Category</th>
+                        <th scope="col">Keywords</th>
                         <th scope="col">Actions</th>
                     </tr>
                 </thead>
@@ -28,7 +30,19 @@
                 {% if todo.complete == False %}
                 <tr class="pointer">
                     <td>{{loop.index}}</td>
+
                     <td>{{todo.title}}</td>
+
+                    <td>
+                        <span class="badge bg-primary">
+                            {{todo.category}}
+                        </span>
+                    </td>
+
+                    <td>
+                        {{todo.keywords}}
+                    </td>
+
                     <td>
                         <button onclick="window.location.href='edit-todo-page/{{todo.id}}'"
                                 type="button" class="btn btn-info">
@@ -37,9 +51,23 @@
                     </td>
                 </tr>
                 {% else %}
-                <tr class="pointer alert alert-success">
+               <tr class="pointer alert alert-success">
                     <td>{{loop.index}}</td>
-                    <td class="strike-through-td">{{todo.title}}</td>
+
+                    <td class="strike-through-td">
+                        {{todo.title}}
+                    </td>
+
+                    <td>
+                        <span class="badge bg-success">
+                            {{todo.category}}
+                        </span>
+                    </td>
+
+                    <td>
+                        {{todo.keywords}}
+                    </td>
+
                     <td>
                         <button onclick="window.location.href='edit-todo-page/{{todo.id}}'"
                                 type="button" class="btn btn-info">
