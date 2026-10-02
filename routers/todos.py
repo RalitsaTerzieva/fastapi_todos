@@ -9,6 +9,7 @@ from .auth import get_current_user
 from starlette.responses import RedirectResponse
 from core.templates import templates
 from services.todo_classifier import classify_todo
+from services.nlp_analysis import analyze_text
 
 
 router = APIRouter(
@@ -42,35 +43,37 @@ def redirect_to_login():
 @router.get("/todo-page")
 async def render_todo_page(request: Request, db: db_dependency):
     try:
-        token = request.cookies.get("access_token")
-
-        if not token:
-            return redirect_to_login()
-        
-        user = await get_current_user(token)
+        user = await get_current_user(request)
 
         todos = db.query(models.Todos).filter(
             models.Todos.owner_id == user.get("id")
         ).all()
+
+        nlp_results = {}
+
+        for todo in todos:
+            text = f"{todo.title} {todo.description or ''}"
+            nlp_results[todo.id] = analyze_text(text)
 
         return templates.TemplateResponse(
             request=request,
             name="todo.html",
             context={
                 "todos": todos,
-                "user": user
+                "user": user,
+                "nlp_results": nlp_results
             }
         )
 
     except Exception as e:
         print("ERROR:", e)
-        return redirect_to_login()
+        raise
     
 
 @router.get('/add-todo-page')
 async def render_todo_page(request: Request):
     try:
-        user = await get_current_user(request.cookies.get('access_token'))
+        user = await get_current_user(request)
 
         if user is None:
             return redirect_to_login()

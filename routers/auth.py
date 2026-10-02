@@ -1,6 +1,6 @@
 from datetime import timedelta, datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from models import Users
 from passlib.context import CryptContext
@@ -20,7 +20,7 @@ SECRET_KEY = "8c3b9a4c5f1e2d7a8b9c0d1e2f3a4b5c6d7e8f90123456789abcdef012345678"
 ALGORITHM = "HS256"
 
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+
 
 class CreateUserRequest(BaseModel):
     username: str
@@ -81,19 +81,44 @@ def create_access_token(username: str, user_id: int, role: str, expires_delta: t
     encode.update({"exp": expires})
     return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
 
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+async def get_current_user(request: Request):
+
+    token = request.cookies.get("access_token")
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate user."
+        )
+
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM]
+        )
+
         username: str = payload.get("sub")
-        user_id: int = payload.get('id')
-        user_role: str = payload.get('role')
+        user_id: int = payload.get("id")
+        user_role: str = payload.get("role")
+
         if username is None or user_id is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                                detail='Could not validate user.')
-        return {'username': username, 'id': user_id, 'user_role': user_role}
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate user."
+            )
+
+        return {
+            "username": username,
+            "id": user_id,
+            "user_role": user_role
+        }
+
     except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail='Could not validate user.')
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate user."
+        )
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
@@ -114,12 +139,36 @@ async def create_user(db: db_dependency,create_user_request: CreateUserRequest):
 
 
 @router.post("/token", response_model=Token)
-async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency):
+async def login_for_access_token(
+    response: Response,
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    db: db_dependency
+):
     user = authenticate_user(form_data.username, form_data.password, db)
-    if not user: 
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail='Could not validate user.')
-    
-    token = create_access_token(user.username, user.id, user.role, expires_delta=timedelta(minutes=30))
 
-    return {'access_token': token, 'token_type': 'bearer'}
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Could not validate user.'
+        )
+
+    token = create_access_token(
+        user.username,
+        user.id,
+        user.role,
+        expires_delta=timedelta(minutes=30)
+    )
+
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        max_age=30 * 60,
+        expires=30 * 60,
+        samesite="lax"
+    )
+
+    return {
+        'access_token': token,
+        'token_type': 'bearer'
+    }
