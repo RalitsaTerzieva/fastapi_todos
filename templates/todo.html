@@ -7,81 +7,366 @@
         <div class="card-header">
             Your Todo's!
         </div>
-        <div class="card-body">
-            <h5 class="card-title">
-                List of your todo's!
-            </h5>
-            <p class="card-text">
-                Information regarding stuff that needs to be complete
-            </p>
 
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Info</th>
-                        <th scope="col">Category</th>
-                        <th scope="col">Keywords</th>
-                        <th scope="col">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {% for todo in todos %}
+```
+    <div class="card-body">
+        <h5 class="card-title">
+            List of your todo's!
+        </h5>
+
+        <p class="card-text">
+            Information regarding stuff that needs to be complete
+        </p>
+
+        <table class="table table-hover">
+
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Info</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Keywords</th>
+                    <th scope="col">Actions</th>
+                    <th scope="col">NLP Analysis</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            {% for todo in todos %}
+
                 {% if todo.complete == False %}
-                <tr class="pointer">
-                    <td>{{loop.index}}</td>
 
-                    <td>{{todo.title}}</td>
+                <!-- Todo row -->
+                <tr class="pointer">
+
+                    <td>
+                        {{ loop.index }}
+                    </td>
+
+                    <td>
+                        {{ todo.title }}
+                    </td>
 
                     <td>
                         <span class="badge bg-primary">
-                            {{todo.category}}
+                            {{ todo.category }}
                         </span>
                     </td>
 
                     <td>
-                        {{todo.keywords}}
+                        {{ todo.keywords }}
                     </td>
 
                     <td>
-                        <button onclick="window.location.href='edit-todo-page/{{todo.id}}'"
-                                type="button" class="btn btn-info">
+                        <button
+                            onclick="window.location.href='edit-todo-page/{{ todo.id }}'"
+                            type="button"
+                            class="btn btn-info">
                             Edit
                         </button>
                     </td>
+
+                    <td>
+                        <button
+                            class="btn btn-secondary"
+                            type="button"
+                            data-toggle="collapse"
+                            data-target="#nlp-{{ todo.id }}"
+                            aria-expanded="false"
+                            aria-controls="nlp-{{ todo.id }}">
+                            Analyze
+                        </button>
+                    </td>
+
                 </tr>
+
+                <!-- NLP analysis row -->
+                <tr>
+
+                    <td colspan="6">
+
+                        <div
+                            class="collapse"
+                            id="nlp-{{ todo.id }}">
+
+                            <div class="card card-body text-start">
+
+                                <h5>NLP Analysis</h5>
+
+                                <!-- Tokens -->
+                                <h6>Tokens</h6>
+
+                                <p>
+                                    {% for token in nlp_results[todo.id].tokens %}
+
+                                        <span class="badge bg-light text-dark">
+                                            {{ token }}
+                                        </span>
+
+                                    {% endfor %}
+                                </p>
+
+                                <!-- POS -->
+                                <h6>Parts of Speech</h6>
+
+                                <table class="table table-sm">
+
+                                    <thead>
+                                        <tr>
+                                            <th>Word</th>
+                                            <th>POS Tag</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+
+                                        {% for item in nlp_results[todo.id].pos_tags %}
+
+                                        <tr>
+                                            <td>
+                                                {{ item.word }}
+                                            </td>
+
+                                            <td>
+                                                <span class="badge bg-info">
+                                                    {{ item.tag }}
+                                                </span>
+                                            </td>
+                                        </tr>
+
+                                        {% endfor %}
+
+                                    </tbody>
+
+                                </table>
+
+                                <!-- NER -->
+                                <h6>Named Entities</h6>
+
+                                {% if nlp_results[todo.id].entities %}
+
+                                    <table class="table table-sm">
+
+                                        <thead>
+                                            <tr>
+                                                <th>Entity</th>
+                                                <th>Type</th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+
+                                            {% for entity in nlp_results[todo.id].entities %}
+
+                                            <tr>
+                                                <td>
+                                                    {{ entity.text }}
+                                                </td>
+
+                                                <td>
+                                                    <span class="badge bg-warning text-dark">
+                                                        {{ entity.label }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+
+                                            {% endfor %}
+
+                                        </tbody>
+
+                                    </table>
+
+                                {% else %}
+
+                                    <p>
+                                        No named entities found.
+                                    </p>
+
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
                 {% else %}
-               <tr class="pointer alert alert-success">
-                    <td>{{loop.index}}</td>
+
+                <!-- Completed Todo row -->
+                <tr class="pointer alert alert-success">
+
+                    <td>
+                        {{ loop.index }}
+                    </td>
 
                     <td class="strike-through-td">
-                        {{todo.title}}
+                        {{ todo.title }}
                     </td>
 
                     <td>
                         <span class="badge bg-success">
-                            {{todo.category}}
+                            {{ todo.category }}
                         </span>
                     </td>
 
                     <td>
-                        {{todo.keywords}}
+                        {{ todo.keywords }}
                     </td>
 
                     <td>
-                        <button onclick="window.location.href='edit-todo-page/{{todo.id}}'"
-                                type="button" class="btn btn-info">
+                        <button
+                            onclick="window.location.href='edit-todo-page/{{ todo.id }}'"
+                            type="button"
+                            class="btn btn-info">
                             Edit
                         </button>
                     </td>
+
+                    <td>
+                        <button
+                            class="btn btn-secondary"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#nlp-{{ todo.id }}"
+                            aria-expanded="false"
+                            aria-controls="nlp-{{ todo.id }}">
+                            Analyze
+                        </button>
+                    </td>
+
                 </tr>
+
+                <!-- NLP analysis row -->
+                <tr>
+
+                    <td colspan="6">
+
+                        <div
+                            class="collapse"
+                            id="nlp-{{ todo.id }}">
+
+                            <div class="card card-body text-start">
+
+                                <h5>NLP Analysis</h5>
+
+                                <!-- Tokens -->
+                                <h6>Tokens</h6>
+
+                                <p>
+                                    {% for token in nlp_results[todo.id].tokens %}
+
+                                        <span class="badge bg-light text-dark">
+                                            {{ token }}
+                                        </span>
+
+                                    {% endfor %}
+                                </p>
+
+                                <!-- POS -->
+                                <h6>Parts of Speech</h6>
+
+                                <table class="table table-sm">
+
+                                    <thead>
+                                        <tr>
+                                            <th>Word</th>
+                                            <th>POS Tag</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+
+                                        {% for item in nlp_results[todo.id].pos_tags %}
+
+                                        <tr>
+                                            <td>
+                                                {{ item.word }}
+                                            </td>
+
+                                            <td>
+                                                <span class="badge bg-info">
+                                                    {{ item.tag }}
+                                                </span>
+                                            </td>
+                                        </tr>
+
+                                        {% endfor %}
+
+                                    </tbody>
+
+                                </table>
+
+                                <!-- NER -->
+                                <h6>Named Entities</h6>
+
+                                {% if nlp_results[todo.id].entities %}
+
+                                    <table class="table table-sm">
+
+                                        <thead>
+                                            <tr>
+                                                <th>Entity</th>
+                                                <th>Type</th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+
+                                            {% for entity in nlp_results[todo.id].entities %}
+
+                                            <tr>
+                                                <td>
+                                                    {{ entity.text }}
+                                                </td>
+
+                                                <td>
+                                                    <span class="badge bg-warning text-dark">
+                                                        {{ entity.label }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+
+                                            {% endfor %}
+
+                                        </tbody>
+
+                                    </table>
+
+                                {% else %}
+
+                                    <p>
+                                        No named entities found.
+                                    </p>
+
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
                 {% endif %}
-                {% endfor %}
-                </tbody>
-            </table>
-            <a href="add-todo-page" class="btn btn-primary">Add a new todo!</a>
-        </div>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+        <a href="add-todo-page" class="btn btn-primary">
+            Add a new todo!
+        </a>
+
     </div>
+</div>
+```
+
 </div>
 
 {% endblock %}
