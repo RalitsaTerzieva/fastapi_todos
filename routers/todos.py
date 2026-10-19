@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Path, status, Request
+from fastapi import APIRouter, Depends, HTTPException, Path, status, Request, Query
 from pydantic import BaseModel, Field
 from core import templates
 import models
@@ -10,7 +10,7 @@ from starlette.responses import RedirectResponse
 from core.templates import templates
 from services.todo_classifier import classify_todo
 from services.nlp_analysis import analyze_text
-
+from services.nlp_search import find_similar_todos
 
 router = APIRouter(
     prefix='/todos',
@@ -226,3 +226,31 @@ async def delete_todo(user: user_dependency, db: db_dependency, todo_id: int = P
 
 
     db.commit()
+
+
+@router.get("/search")
+def search_todos(
+    user: user_dependency,
+    db: db_dependency,
+    q: str = Query(min_length=1, max_length=100)
+):
+    if user is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication Failed"
+        )
+
+    # Search only the current user's tasks.
+    todos = db.query(models.Todos).filter(
+        models.Todos.owner_id == user.get("id")
+    ).all()
+
+    return [
+        {
+            "id": result["todo"].id,
+            "title": result["todo"].title,
+            "category": result["todo"].category,
+            "similarity": result["similarity"]
+        }
+        for result in find_similar_todos(q, todos)
+    ]
