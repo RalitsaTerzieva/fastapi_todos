@@ -11,6 +11,7 @@ from core.templates import templates
 from services.todo_classifier import classify_todo
 from services.nlp_analysis import analyze_text
 from services.nlp_search import find_similar_todos
+from services.nlp_bow import create_bow
 
 router = APIRouter(
     prefix='/todos',
@@ -38,22 +39,81 @@ def redirect_to_login():
     redirect_response.delete_cookie(key="access_token")
     return redirect_response
 
+@router.get("/add-todo-page")
+async def render_add_todo_page(request: Request):
+    user = await get_current_user(request)
+
+    if user is None:
+        return redirect_to_login()
+
+    return templates.TemplateResponse(
+        request=request,
+        name="add-todo.html",
+        context={"user": user}
+    )
+
 
 ### Pages ###
+# @router.get("/todo-page")
+# async def render_todo_page(request: Request, db: db_dependency):
+#     try:
+#         user = await get_current_user(request)
+
+#         todos = db.query(models.Todos).filter(
+#             models.Todos.owner_id == user.get("id")
+#         ).all()
+
+#         nlp_results = {}
+
+#         for todo in todos:
+#             text = f"{todo.title} {todo.description or ''}"
+#             nlp_results[todo.id] = analyze_text(text)
+
+#         return templates.TemplateResponse(
+#             request=request,
+#             name="todo.html",
+#             context={
+#                 "todos": todos,
+#                 "user": user,
+#                 "nlp_results": nlp_results
+#             }
+#         )
+
+#     except Exception as e:
+#         print("ERROR:", e)
+#         raise
+    
+
+
 @router.get("/todo-page")
 async def render_todo_page(request: Request, db: db_dependency):
     try:
         user = await get_current_user(request)
 
+        if user is None:
+            return redirect_to_login()
+
+        # Get only this user's tasks
         todos = db.query(models.Todos).filter(
             models.Todos.owner_id == user.get("id")
         ).all()
 
+        # Existing NLP analysis: tokens, POS, entities, etc.
         nlp_results = {}
-
         for todo in todos:
             text = f"{todo.title} {todo.description or ''}"
             nlp_results[todo.id] = analyze_text(text)
+
+        # New BoW analysis across this user's task collection
+        bow_data = create_bow(todos)
+
+        # Prepare BoW data indexed by task ID for Jinja
+        bow_results = {}
+        for index, todo in enumerate(todos):
+            bow_results[todo.id] = {
+                "vocabulary": bow_data["vocabulary"],
+                "vector": bow_data["vectors"][index]
+            }
 
         return templates.TemplateResponse(
             request=request,
@@ -61,33 +121,14 @@ async def render_todo_page(request: Request, db: db_dependency):
             context={
                 "todos": todos,
                 "user": user,
-                "nlp_results": nlp_results
+                "nlp_results": nlp_results,
+                "bow_results": bow_results
             }
         )
 
     except Exception as e:
-        print("ERROR:", e)
+        print("ERROR rendering todo page:", e)
         raise
-    
-
-@router.get('/add-todo-page')
-async def render_todo_page(request: Request):
-    try:
-        user = await get_current_user(request)
-
-        if user is None:
-            return redirect_to_login()
-
-        return templates.TemplateResponse(
-            request=request,
-            name="add-todo.html",
-            context={
-                "user": user
-            }
-        )
-
-    except:
-        return redirect_to_login()
     
 
 @router.get("/edit-todo-page/{todo_id}")

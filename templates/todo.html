@@ -107,6 +107,38 @@
                                     {% endfor %}
                                 </p>
 
+                                <!-- Bag of Words -->
+                                <h6>Bag of Words (word counts)</h6>
+
+                                {% set bow = bow_results[todo.id] %}
+
+                                {% if bow and bow.vocabulary %}
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>Word</th>
+                                                    <th>Count</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for word in bow.vocabulary %}
+                                                    {% set count = bow.vector[loop.index0] %}
+
+                                                    {% if count > 0 %}
+                                                        <tr>
+                                                            <td>{{ word }}</td>
+                                                            <td>{{ count }}</td>
+                                                        </tr>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                {% else %}
+                                    <p>No BoW terms available for this task.</p>
+                                {% endif %}
+
                                 <!-- POS -->
                                 <h6>Parts of Speech</h6>
 
