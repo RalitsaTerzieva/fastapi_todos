@@ -18,6 +18,36 @@
             Information regarding stuff that needs to be complete
         </p>
 
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Find Similar Todos</h5>
+                <small class="text-muted">
+                    Search tasks using TF-IDF and cosine similarity
+                </small>
+            </div>
+
+            <div class="card-body">
+                <form id="similarTodoForm">
+                    <div class="input-group">
+                        <input
+                            type="text"
+                            id="similarTodoQuery"
+                            class="form-control"
+                            placeholder="e.g. prepare for university exam"
+                            required
+                        >
+                        <button type="submit" class="btn btn-primary">
+                            Search
+                        </button>
+                    </div>
+                </form>
+
+                <div id="similarTodoStatus" class="mt-3"></div>
+                <div id="similarTodoResults" class="mt-3"></div>
+            </div>
+        </div>
+
         <table class="table table-hover">
 
             <thead>
@@ -400,5 +430,82 @@
 ```
 
 </div>
+
+.
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("similarTodoForm");
+    const input = document.getElementById("similarTodoQuery");
+    const status = document.getElementById("similarTodoStatus");
+    const results = document.getElementById("similarTodoResults");
+
+    form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const query = input.value.trim();
+        results.replaceChildren();
+
+        if (!query) {
+            status.textContent = "Please enter a search word.";
+            return;
+        }
+
+        status.textContent = "Searching...";
+
+        try {
+            const response = await fetch(
+                `/todos/search?q=${encodeURIComponent(query)}`
+            );
+
+            if (!response.ok) {
+                throw new Error(`HTTP error: ${response.status}`);
+            }
+
+            const todos = await response.json();
+
+            if (todos.length === 0) {
+                status.textContent = "No similar todos found.";
+                return;
+            }
+
+            status.textContent = `Found ${todos.length} matching todo(s).`;
+
+            todos.forEach(todo => {
+                const card = document.createElement("div");
+                card.className = "card mb-2 text-start";
+
+                const body = document.createElement("div");
+                body.className = "card-body";
+
+                const title = document.createElement("h6");
+                title.textContent = todo.title;
+
+                const category = document.createElement("p");
+                category.textContent =
+                    `Category: ${todo.category || "Uncategorized"}`;
+
+                const similarity = document.createElement("p");
+                const score = Number(todo.similarity);
+
+                similarity.textContent =
+                    `Similarity: ${Number.isFinite(score)
+                        ? (score * 100).toFixed(1) + "%"
+                        : "N/A"}`;
+
+                body.append(title, category, similarity);
+                card.appendChild(body);
+                results.appendChild(card);
+            });
+
+        } catch (error) {
+            console.error("Search failed:", error);
+            status.textContent =
+                "Search failed. Check the browser console and server logs.";
+        }
+    });
+});
+</script>
 
 {% endblock %}
