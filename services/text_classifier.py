@@ -42,3 +42,8 @@ new_todo = ["Prepare for my Python exam"]
 prediction = model.predict(new_todo)
 
 print("Predicted category:", prediction[0])
+
+# Logistic regression probabilities
+probabilities = model.predict_proba(new_todo)
+
+print(probabilities)
