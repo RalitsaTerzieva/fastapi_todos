@@ -37,3 +37,8 @@ model = Pipeline([
 
 model.fit(texts, labels)
 
+new_todo = ["Prepare for my Python exam"]
+
+prediction = model.predict(new_todo)
+
+print("Predicted category:", prediction[0])
