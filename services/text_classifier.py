@@ -34,3 +34,6 @@ model = Pipeline([
     ('tfidf', TfidfVectorizer(stop_words='english')),
     ("classifier", LogisticRegression())
 ])
+
+model.fit(texts, labels)
+
