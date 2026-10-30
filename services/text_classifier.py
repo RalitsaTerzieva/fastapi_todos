@@ -29,3 +29,8 @@ labels = [
     "Health",
     "Health"
 ]
+
+model = Pipeline([
+    ('tfidf', TfidfVectorizer(stop_words='english')),
+    ("classifier", LogisticRegression())
+])
